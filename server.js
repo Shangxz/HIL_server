@@ -95,7 +95,8 @@ router.post('/', function (req, res) {
                 data: {
                     plate_id: plate,
                     space_id: 'N/A',
-                    balance: 50000
+                    balance: 50000,
+                    time: -1
                 },
             };
             console.log(task);
@@ -110,6 +111,7 @@ router.post('/', function (req, res) {
 fuel.post('/', async function (req, res) {
     var space_id = req.body.space_id;
     var time = req.body.time;
+    console.log(time);
     var plate = req.body.plate_num;
     console.log(space_id)
     console.log(time)
@@ -165,7 +167,7 @@ money.post('/', async function (req, res) {
     console.log(customer);
     var final_customer = customer[0][0].balance;
 
-    res.json({final_parking, final_customer});
+    res.send({final_parking, final_customer});
 });
 
 app.use('/create', router);
