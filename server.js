@@ -195,7 +195,7 @@ money.post('/', async function (req, res) {
     console.log(customer);
     var final_customer = customer[0][0].balance;
     data = {"merchant" : final_parking};
-    data["License " + plate] = customer;
+    data["License " + plate] = final_customer;
 
     res.send(data);
 });
