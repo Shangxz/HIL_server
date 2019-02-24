@@ -7,6 +7,13 @@ var request = require("request");
 
 var validator = require('validate-image-url');
 
+var proj_id = "hackilinois2019-232622";
+
+var {Datastore} = require('@google-cloud/datastore');
+const datastore = new Datastore({
+    projectId: proj_id,
+  });
+
 
 // configure app to use bodyParser()
 // this will let us get the data from a POST
@@ -29,9 +36,11 @@ var api_key = '31c809cc5219736cd4194f399101830e'
 
 // // test route to make sure everything is working (accessed at GET http://localhost:8080/api)
 router.post('/', function (req, res) {
+    console.log(req.body);
     var first_name = req.body.first_name;
     var last_name = req.body.last_name;
-    var plate = req.body.plate;
+    var plate = req.body.plate_num;
+    console.log(plate);
 
     var options = { method: 'POST',
     url: 'http://api.reimaginebanking.com/customers',
@@ -74,7 +83,23 @@ router.post('/', function (req, res) {
         request(options, function (error, response, body) {
             if (error) throw new Error(error);
 
-            console.log(body);
+            //pushing to google data store
+            var kind = 'plate';
+            console.log(kind);
+            var name = body.objectCreated.account_number;
+            console.log(name);
+            const taskKey = datastore.key([kind, name]);
+            console.log(plate)
+            const task = {
+                key: taskKey,
+                data: {
+                  plate_id: plate,
+                  space_id: 'N/A'
+                },
+              };
+            datastore.save(task);
+            console.log(`Saved ${task.key.name}: ${task.data.plate_id}`);
+
         });
     });
 
