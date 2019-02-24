@@ -112,10 +112,10 @@ fuel.post('/', async function (req, res) {
     var space_id = req.body.space_id;
     var time = req.body.time;
     var plate = req.body.plate_num;
+    console.log(space_id)
+    console.log(time)
+    console.log(plate)
     if (plate != " "){
-        // console.log(space_id)
-        // console.log(time)
-        // console.log(plate)
         time = time.substring(11, 23)
         time = time.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
         // console.log(time);
