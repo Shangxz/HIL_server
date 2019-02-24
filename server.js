@@ -29,6 +29,7 @@ var port = process.env.PORT || 8080; // set our port
 // =============================================================================
 var router = express.Router(); // get an instance of the express Router
 var fuel = express.Router();
+var money = express.Router();
 
 var state = 'IL'
 var zip_code = '61820'
@@ -97,6 +98,7 @@ router.post('/', function (req, res) {
                     balance: 50000
                 },
             };
+            console.log(task);
             datastore.save(task);
             res.json("success!")
             console.log(`Saved ${task.key.name}: ${task.data.plate_id}`);
@@ -107,71 +109,68 @@ router.post('/', function (req, res) {
 
 fuel.post('/', async function (req, res) {
     var space_id = req.body.space_id;
-    var time = req.body.time_elasped;
+    var time = req.body.time;
     var plate = req.body.plate_num;
     console.log(space_id)
     console.log(time)
     console.log(plate)
+
+    var rate = 20.0
 
     var space_query = datastore
         .createQuery('plate')
         .filter('space_id', '=', space_id);
 
     var parking_space = await datastore.runQuery(space_query);
-    // console.log(parking_space);
-    // console.log(parking_space[0][0][datastore.KEY].name);
-    var parking_space_id = parking_space[0][0][datastore.KEY].name;
-    console.log(parking_space_id);
-
-
+    console.log(parking_space);
+    console.log(parking_space[0][0][datastore.KEY]);
+    // var temp = parking_space[0][0][datastore.KEY].get();
+    // var parking_space_val = parking_space[0][0].balance;
+    // console.log(parking_space_val);
+    parking_space[0][0].balance = parking_space[0][0].balance + 5 * rate / 3600.0;
+    var final_parking = parking_space[0][0].balance
+    // parking_space[0][0].put();
+    datastore.update(parking_space[0][0]);
 
     var cus_query = datastore
         .createQuery('plate')
         .filter('plate_id', '=', plate);
     var customer = await datastore.runQuery(cus_query);
-    var customer_id = customer[0][0][datastore.KEY].name;
-    console.log(customer_id);
-    // console.log(customer);
+    console.log(customer);
+    customer[0][0].balance = customer[0][0].balance - 5 * rate / 3600.0;
+    var final_customer = customer[0][0].balance;
+    datastore.update(customer[0][0]);
 
-
-    var options = { method: 'GET',
-    url: 'http://api.reimaginebanking.com/accounts/' + parking_space_id,
-
-    qs: { key: api_key },
-    headers: 
-    { 'Postman-Token': '25b5f2cc-1f6d-4f2e-9dd6-cea8b5a03d20',
-        'cache-control': 'no-cache' } };
-
-    request(options, function (error, response, body) {
-        if (error) throw new Error(error);
-
-        // console.log(body);
-        var merchant_balance = body.balance;
-
-        var options = { method: 'GET',
-        url: 'http://api.reimaginebanking.com/accounts/' + customer_id,
-        qs: { key: api_key },
-        headers: 
-        { 'Postman-Token': '25b5f2cc-1f6d-4f2e-9dd6-cea8b5a03d20',
-            'cache-control': 'no-cache' } };
-
-        request(options, function (error, response, body) {
-            if (error) throw new Error(error);
-
-            // console.log(body);
-            var customer_balance = body.balance;
-
-        });
-
-    });
+    res.json({final_parking, final_customer});
     
 });
 
+money.post('/', async function (req, res) {
+    var space_id = req.body.space_id;
+    var plate = req.body.plate_num;
+    console.log(space_id);
+    console.log(plate);
 
+    var space_query = datastore
+        .createQuery('plate')
+        .filter('space_id', '=', space_id);
+    var parking_space = await datastore.runQuery(space_query);
+    console.log(parking_space);
+    var final_parking = parking_space[0][0].balance;
 
+    var cus_query = datastore
+        .createQuery('plate')
+        .filter('plate_id', '=', plate);
+    var customer = await datastore.runQuery(cus_query);
+    console.log(customer);
+    var final_customer = customer[0][0].balance;
+
+    res.json({final_parking, final_customer});
+});
 
 app.use('/create', router);
 app.use('/getFuel', fuel);
+app.use('/stats', money)
 
 // START THE SERVER
 // =============================================================================
