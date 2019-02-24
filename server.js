@@ -28,13 +28,12 @@ var port = process.env.PORT || 8080; // set our port
 // ROUTES FOR OUR API
 // =============================================================================
 var router = express.Router(); // get an instance of the express Router
+var fuel = express.Router();
 
 var state = 'IL'
 var zip_code = '61820'
 var api_key = '31c809cc5219736cd4194f399101830e'
 
-
-// // test route to make sure everything is working (accessed at GET http://localhost:8080/api)
 router.post('/', function (req, res) {
     console.log(req.body);
     var first_name = req.body.first_name;
@@ -82,7 +81,6 @@ router.post('/', function (req, res) {
 
         request(options, function (error, response, body) {
             if (error) throw new Error(error);
-
             //pushing to google data store
             var kind = 'plate';
             console.log(kind);
@@ -93,20 +91,51 @@ router.post('/', function (req, res) {
             const task = {
                 key: taskKey,
                 data: {
-                  plate_id: plate,
-                  space_id: 'N/A'
+                    plate_id: plate,
+                    space_id: 'N/A'
                 },
-              };
+            };
             datastore.save(task);
+            response.json("success!")
             console.log(`Saved ${task.key.name}: ${task.data.plate_id}`);
-
         });
     });
-
 });
 
 
+fuel.post('/', async function (req, res) {
+    var space_id = req.body.space_id;
+    var time = req.body.time_elasped;
+    var plate = req.body.plate_num;
+    console.log(space_id)
+    console.log(time)
+    console.log(plate)
+
+    var space_query = datastore
+        .createQuery('plate')
+        .filter('space_id', '=', space_id);
+
+    var parking_space = await datastore.runQuery(space_query);
+    // console.log(parking_space);
+    // console.log(parking_space[0][0][datastore.KEY].name);
+    var parking_space_id = parking_space[0][0][datastore.KEY].name;
+    console.log(parking_space_id);
+
+    var cus_query = datastore
+        .createQuery('plate')
+        .filter('plate_id', '=', plate);
+    var customer = await datastore.runQuery(cus_query);
+    var customer_id = customer[0][0][datastore.KEY].name;
+    console.log(customer_id);
+    // console.log(customer);
+    
+});
+
+
+
+
 app.use('/create', router);
+app.use('/getFuel', fuel);
 
 // START THE SERVER
 // =============================================================================
