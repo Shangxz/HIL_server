@@ -127,11 +127,6 @@ fuel.post('/', async function (req, res) {
             .filter('space_id', '=', space_id);
         var parking_space = await datastore.runQuery(space_query);
 
-        var cus_query = datastore
-            .createQuery('plate')
-            .filter('plate_id', '=', plate);
-        var customer = await datastore.runQuery(cus_query);
-
         var time_multi = 5;
 
         if (parking_space[0][0].time != -1){
@@ -140,15 +135,23 @@ fuel.post('/', async function (req, res) {
         else{
             parking_space[0][0].time = time;
         }
+
         if (time_multi > 30){
             time_multi = 5
         }
+        console.log(time_multi);
+        console.log(parking_space[0][0].balance);
         
         parking_space[0][0].balance = parking_space[0][0].balance + time_multi * rate / 3600.0;
         var final_parking = parking_space[0][0].balance
         datastore.update(parking_space[0][0]);
 
+        var cus_query = datastore
+            .createQuery('plate')
+            .filter('plate_id', '=', plate);
+        var customer = await datastore.runQuery(cus_query);
 
+        var time_multi = 5;
         // console.log(customer);
         if (customer[0][0].time != -1){
             time_multi = time - customer[0][0].time;
