@@ -111,39 +111,64 @@ router.post('/', function (req, res) {
 fuel.post('/', async function (req, res) {
     var space_id = req.body.space_id;
     var time = req.body.time;
-    console.log(time);
     var plate = req.body.plate_num;
-    console.log(space_id)
-    console.log(time)
-    console.log(plate)
+    if (plate != " "){
+        // console.log(space_id)
+        // console.log(time)
+        // console.log(plate)
+        time = time.substring(11, 23)
+        time = time.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
+        // console.log(time);
 
-    var rate = 20.0
+        var rate = 20.0
 
-    var space_query = datastore
-        .createQuery('plate')
-        .filter('space_id', '=', space_id);
+        var space_query = datastore
+            .createQuery('plate')
+            .filter('space_id', '=', space_id);
+        var parking_space = await datastore.runQuery(space_query);
 
-    var parking_space = await datastore.runQuery(space_query);
-    console.log(parking_space);
-    console.log(parking_space[0][0][datastore.KEY]);
-    // var temp = parking_space[0][0][datastore.KEY].get();
-    // var parking_space_val = parking_space[0][0].balance;
-    // console.log(parking_space_val);
-    parking_space[0][0].balance = parking_space[0][0].balance + 5 * rate / 3600.0;
-    var final_parking = parking_space[0][0].balance
-    // parking_space[0][0].put();
-    datastore.update(parking_space[0][0]);
+        var cus_query = datastore
+            .createQuery('plate')
+            .filter('plate_id', '=', plate);
+        var customer = await datastore.runQuery(cus_query);
 
-    var cus_query = datastore
-        .createQuery('plate')
-        .filter('plate_id', '=', plate);
-    var customer = await datastore.runQuery(cus_query);
-    console.log(customer);
-    customer[0][0].balance = customer[0][0].balance - 5 * rate / 3600.0;
-    var final_customer = customer[0][0].balance;
-    datastore.update(customer[0][0]);
+        var time_multi = 5;
 
-    res.json({final_parking, final_customer});
+        if (parking_space[0][0].time != -1){
+            time_multi = time - parking_space[0][0].time;
+        }
+        else{
+            parking_space[0][0].time = time;
+        }
+        if (time_multi > 30){
+            time_multi = 5
+        }
+        
+        parking_space[0][0].balance = parking_space[0][0].balance + time_multi * rate / 3600.0;
+        var final_parking = parking_space[0][0].balance
+        datastore.update(parking_space[0][0]);
+
+
+        // console.log(customer);
+        if (customer[0][0].time != -1){
+            time_multi = time - customer[0][0].time;
+        }
+        else{
+            customer[0][0].time = time;
+        }
+        if (time_multi > 30){
+            time_multi = 5
+        }
+
+        customer[0][0].balance = customer[0][0].balance - time_multi * rate / 3600.0;
+        var final_customer = customer[0][0].balance;
+        datastore.update(customer[0][0]);
+
+        res.json({final_parking, final_customer});
+    }
+    else{
+        res.json("Empty String!");
+    }
     
 });
 
