@@ -82,21 +82,23 @@ router.post('/', function (req, res) {
         request(options, function (error, response, body) {
             if (error) throw new Error(error);
             //pushing to google data store
+            // console.log(body)
             var kind = 'plate';
-            console.log(kind);
-            var name = body.objectCreated.account_number;
-            console.log(name);
+            // console.log(kind);
+            var name = body.objectCreated._id;
+            // console.log(name);
             const taskKey = datastore.key([kind, name]);
-            console.log(plate)
+            // console.log(plate)
             const task = {
                 key: taskKey,
                 data: {
                     plate_id: plate,
-                    space_id: 'N/A'
+                    space_id: 'N/A',
+                    balance: 50000
                 },
             };
             datastore.save(task);
-            response.json("success!")
+            res.json("success!")
             console.log(`Saved ${task.key.name}: ${task.data.plate_id}`);
         });
     });
@@ -121,6 +123,8 @@ fuel.post('/', async function (req, res) {
     var parking_space_id = parking_space[0][0][datastore.KEY].name;
     console.log(parking_space_id);
 
+
+
     var cus_query = datastore
         .createQuery('plate')
         .filter('plate_id', '=', plate);
@@ -128,6 +132,38 @@ fuel.post('/', async function (req, res) {
     var customer_id = customer[0][0][datastore.KEY].name;
     console.log(customer_id);
     // console.log(customer);
+
+
+    var options = { method: 'GET',
+    url: 'http://api.reimaginebanking.com/accounts/' + parking_space_id,
+
+    qs: { key: api_key },
+    headers: 
+    { 'Postman-Token': '25b5f2cc-1f6d-4f2e-9dd6-cea8b5a03d20',
+        'cache-control': 'no-cache' } };
+
+    request(options, function (error, response, body) {
+        if (error) throw new Error(error);
+
+        // console.log(body);
+        var merchant_balance = body.balance;
+
+        var options = { method: 'GET',
+        url: 'http://api.reimaginebanking.com/accounts/' + customer_id,
+        qs: { key: api_key },
+        headers: 
+        { 'Postman-Token': '25b5f2cc-1f6d-4f2e-9dd6-cea8b5a03d20',
+            'cache-control': 'no-cache' } };
+
+        request(options, function (error, response, body) {
+            if (error) throw new Error(error);
+
+            // console.log(body);
+            var customer_balance = body.balance;
+
+        });
+
+    });
     
 });
 
