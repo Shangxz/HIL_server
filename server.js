@@ -21,7 +21,7 @@ app.use(bodyParser.urlencoded({
     extended: true
 }));
 
-app.use(bodyParser.text());
+app.use(bodyParser.json());
 
 var port = process.env.PORT || 8080; // set our port
 
