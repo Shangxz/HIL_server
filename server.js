@@ -194,8 +194,10 @@ money.post('/', async function (req, res) {
     var customer = await datastore.runQuery(cus_query);
     console.log(customer);
     var final_customer = customer[0][0].balance;
+    data = {"merchant" : final_parking};
+    data["License " + plate] = plate;
 
-    res.send({final_parking, final_customer});
+    res.send(data);
 });
 
 app.use('/create', router);
